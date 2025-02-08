@@ -1,0 +1,97 @@
+@startuml
+title Диаграмма контейнеров (эко-)системы SmartHome
+
+top to bottom direction
+
+!include C4_Container.puml
+
+Person(User, "Пользователь", "")
+Person(Support, "Специалист поддержки", "")
+Person(Marketing, "Специалист по продажам и маркетингу", "")
+Person(Admin, "Администратор", "")
+
+Container_Boundary(SmartHome, "(Эко-) Система SmartHome", "") {
+  together {
+    Container(WebApp, "Web-приложение пользователя", "")
+    Container(MobileApp, "Мобильное приложение", "")
+    Container(InternalWebApp, "Внутреннее Web-приложение", "")
+    Container(ApiGateway, "API Gateway", "")
+  }
+  Container_Boundary(AuthContext, "Учет и управление пользователями") {
+    Container(AuthService, "Сервис управления пользователями", "Java", "Учет пользователей, регистрация новых пользователей, их оповещение, аутентификация в т.ч. через внешние системы")
+    ContainerDb(AuthDatabase, "БД сервиса управления пользователями", "PostgreSQL", "Хранение данных пользователей")
+    Rel(AuthService, AuthDatabase, "Чтение и запись данных пользователей системы")
+    System_Ext(OAuthProvider, "Внешний сервис для аутентификации*", "Сервис для аутентификации пользователей через внешние системы (Google/Yandex/Mail и т.д.)")
+    System_Ext(EMailService, "Внешний сервис для взаимодействия с пользователями через EMail*", "Внешний сервис для взаимодействия с пользователями через EMail (Google/Yandex/Mail и т.д.)")
+    Rel(AuthService, EMailService, "Отправляет EMail'ы")
+    Rel(AuthService, OAuthProvider, "Запрашивает данные для аутентификации")
+    'Rel(EMailService, User, "Отправляет EMail'ы")
+  }
+  Container_Boundary(TechSupportContext, "Техническая поддержка пользователей") {
+    Container(TechSupportService, "Сервис обращений", "Java", "Учет и работа с обращениями пользователей")
+    ContainerDb(TechSupportDatabase, "БД сервиса обращений", "PostgreSQL", "Хранение данных обращений пользователей")
+    Rel(TechSupportService, TechSupportDatabase, "Чтение и запись данных обращений")
+  }
+  Container_Boundary(CommercialContext, "Коммерческая деятельность") {
+    Container(BillingService, "Сервис тарификации и расчетов", "Java", "Управление тарифами и услугами (подписками) пользователей")
+    ContainerDb(BillingDatabase, "БД сервиса тарификации и расчетов", "PostgreSQL", "Хранение данных тарификации и расчетов")
+    Container(SalesService, "Сервис продаж устройств", "Java", "Работа с катоалогом доступных устройств, учет запасов, продажи устройств")
+    ContainerDb(SalesDatabase, "БД сервиса продаж устройств", "PostgreSQL", "Хранение данных о продажах устройств")
+    Container(PaymentService, "Сервис платежей", "Java", "Сервис обработки платежей - ACL для внешних платежных шлюзов")
+    ContainerDb(PaymentDatabase, "БД сервиса платежей", "PostgreSQL", "Хранение данных о платежах пользователей")
+    Rel(BillingService, BillingDatabase, "Чтение и запись данных тарификации и расчетов")
+    Rel(SalesService, SalesDatabase, "Чтение и запись данных продаж устройств")
+    Rel(PaymentService, PaymentDatabase, "Чтение и запись данных платежей")
+    Rel(BillingService, PaymentService, "Проведение платежей за подписку на систему")
+    Rel(SalesService, PaymentService, "Проведенние платежей за устройства")
+    System_Ext(ExtPaymentService, "Внешний платежный сервис", "Сервис организации-партнера для проведения финансовых транзакций")
+    Rel(PaymentService, ExtPaymentService, "Инициирует, подтвержает и запрашивает статус платежных операций")
+  }
+  Container_Boundary(SmartControlContext, "Управление умными устройствами") {
+    Container(SmartControlService, "Сервис smart-управления устройствами (программирования пользовательских сценариев)", "Java", "Позволяет пользователю как управлять умными устройствами в ручном режиме, так и программировать собственные сложные сценарии, в т.ч. опирающиеся на события мониторинга")
+    ContainerDb(SmartControlDatabase, "БД сервиса smart-управления устройствами", "PostgreSQL", "Хранение данных пользовательских сценариев")
+    Rel(SmartControlService, SmartControlDatabase, "Чтение и запись данных пользовательских сценариев")
+    Container(DevicesService, "Сервис взаимодействия с устройствами", "Java", "Регистрация, учет, абстракция до терминов системы команд управления (в т.ч. синхронного запроса данных датчиков)")
+    ContainerDb(DevicesDatabase, "БД сервиса взаимодействия с устройствами", "PostgreSQL", "Хранение данных об умных устройствах")
+    Rel(DevicesService, DevicesDatabase, "Чтение и запись данных об умных устройствах")
+    Container(MonitoringService, "Сервис мониторинга, сбора и анализа телеметрии", "Java", "Предоставление оперативного состояния датчиков умных устройств (включая видео), анализ данных с целью определения событий мониторинга")
+    ContainerDb(MonitoringDatabase, "БД сервиса мониторинга", "PosgreSQL / InfluxDB", "Хранение данных и событий мониторинга в соответствии с политикой хранения")
+    Rel(MonitoringService, MonitoringDatabase, "Чтение и запись данных мониторинга")
+    ContainerDb(TelemetryMessageQueue, "Очередь данных телеметрии", "Kafka", "Содержит поступающие данные от датчиков, подлежащие дальнейшей обработке")
+    ContainerDb(AlertsMessageQueue, "Очередь событий мониторинга", "Kafka", "Содержит события системы, определенные посредством анализа данных датчиков и т.д., подлежащие дальнейшей обработке")
+    ContainerDb(FileStorage, "Файловое хранилище", "File system", "Содержит файлы, собранные или поступившие от умных устройств, преже всего видео")
+    Container(DevicesApiGateway, "API Gateway для умных устройств", "")
+    System_Ext(SmartDevices, "Умные устройства", "Датчики и исполнительные механизмы, поддерживающие работу с системой") 
+    Rel(SmartControlService, DevicesService, "Адресует команды управления устройствами")
+    Rel(SmartControlService, MonitoringService, "Запрашивает возможные события мониторинга, для определения реакции на них")
+    Rel(SmartControlService, AlertsMessageQueue, "Вычитавает события для реакции на них в соответствии с определенными сценариями")
+    Rel(SmartControlService, MonitoringService, "Собирает данные с датчиков (в случае опроса со стороны сервера)")
+    Rel(MonitoringService, TelemetryMessageQueue, "Вычитывает данные с датчиков для записи аггрегированной информации и определения событий мониторинга")
+    Rel(MonitoringService, AlertsMessageQueue, "Публикует события мониторинга")
+    Rel(MonitoringService, FileStorage, "Запрашивает отправленные данные")
+    Rel(MonitoringService, DevicesService, "Собирает данные с датчиков (в случае опроса со стороны сервера)")  
+    Rel(DevicesService, SmartDevices, "Управляет устройствами")
+    Rel(DevicesService, SmartDevices, "Собирает данные с датчиков (в случае опроса со стороны сервера)")  
+    Rel(SmartDevices, DevicesApiGateway, "Отправляют данные (в случае периодической отправки на сервер)")
+    Rel(DevicesApiGateway, TelemetryMessageQueue, "Публикует данные телеметрии")
+    Rel(DevicesApiGateway, FileStorage, "Сохраняет данные в хранилище")
+  }
+
+  Rel(WebApp, ApiGateway, "", "HTTP")
+  Rel(MobileApp, ApiGateway, "", "HTTP")
+  Rel(InternalWebApp, ApiGateway, "", "HTTP")
+  Rel(ApiGateway, AuthService, "", "HTTP")
+  Rel(ApiGateway, TechSupportService, "", "HTTP")
+  Rel(ApiGateway, SalesService, "", "HTTP")
+  Rel(ApiGateway, BillingService, "", "HTTP")
+  Rel(ApiGateway, SmartControlService, "", "HTTP")
+  Rel(ApiGateway, MonitoringService, "", "HTTP")
+}
+
+Rel(User, WebApp, "Использует систему: управляет устройствами, просматривает данные мониторинга, программирует сценарии использования, подключает новые комплекты, регистрируется в системе, оплачивает услуги", "HTTP")
+Rel(User, MobileApp, "")
+Rel(Admin, SmartHome, "Поддерживает работоспособность системы")
+Rel(Support, InternalWebApp, "Работает с обращениями пользователей", "HTTP")
+Rel(Marketing, InternalWebApp, "Управляет доступными для покупки устройствами, тарифам и т.д.", "HTTP")
+
+@enduml

@@ -37,7 +37,6 @@
   - поддомен/контекст: взаимодействие с устройствами
   - поддомен/контекст: мониторинг и сбор телеметрии
   - поддомен/контекст: программирования системы управления (пользовательских сценариев)*
-  - поддомен/контекст: обработка событий мониторинга*
 - Домен: коммерческая деятельность*
   - поддомен/контекст: биллинг (подписки, тарифы, и т.д.)
   - поддомен/контекст: продажи приборов
@@ -56,27 +55,47 @@
 
 ### 5. Визуализация контекста системы — диаграмма С4
 
-Добавьте сюда диаграмму контекста в модели C4.
+"новые" (to be) элементы отмечены *
 
-Чтобы добавить ссылку в файл Readme.md, нужно использовать синтаксис Markdown. Это делают так:
+![text](/diagrams/context/context.png)
 
-```markdown
-[Диаграмма контекста C4](\diagrams\context\context.png)
-```
+[PUML](/diagrams/context/context.puml)
 
 # Задание 2. Проектирование микросервисной архитектуры
 
 **Диаграмма контейнеров (Containers)**
 
-Добавьте диаграмму.
+![text](/diagrams/container/container.png)
+
+[PUML](/diagrams/container/container.puml)
 
 **Диаграмма компонентов (Components)**
 
-Добавьте диаграмму для каждого из выделенных микросервисов.
+Сервис SMART-управления устройствами (пользовательскими сценариями):
+
+![text](/diagrams/components/smartcontrol_component.png)
+
+[PUML](/diagrams/components/smartcontrol_component.puml)
+
+Сервис управления устройствами:
+
+![text](/diagrams/components/devices_component.png)
+
+[PUML](/diagrams/components/devices_component.puml)
+
+Сервис мониторинга, сбора и анализа телеметрии:
+
+![text](/diagrams/components/monitoring_component.png)
+
+[PUML](/diagrams/components/monitoring_component.puml)
 
 **Диаграмма кода (Code)**
 
-Добавьте одну диаграмму или несколько.
+Сервис управления устройствами:
+
+![text](/diagrams/code/devices_code.png)
+
+[PUML](/diagrams/code/devices_code.puml)
 
 # Задание 3. Разработка ER-диаграммы
 

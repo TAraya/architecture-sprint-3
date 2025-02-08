@@ -1,0 +1,29 @@
+@startuml
+title Диаграмма кода некоторых объектов сервиса взаимодействия с  устройствами
+
+top to bottom direction
+
+!include ../components/C4_Component.puml
+
+class House {
+  +String address
+  +List<Device> devices
+  +void addDevice()
+  +void removeDevice()
+}
+
+class Device {
+  +String name
+  +List<DeviceCommand> commands
+  +Dictionary<string, object> getState()
+}
+
+class DeviceCommand {
+  +String description
+  +void execute()
+}
+
+House "1" -- "0..*" Device : has
+Device "1" -- "0..*" DeviceCommand : includes
+
+@enduml
