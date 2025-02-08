@@ -1,0 +1,71 @@
+@startuml
+
+entity House {
+  * id : long <<generated>>
+  --
+  * user_id : long <<FK>>
+  * address : text
+  network_info: text
+  description: text
+  other_details : text
+}
+
+entity Device {
+  * id : long <<generated>>
+  --
+  * device_type_id: int <<FK>>
+  * house_id : long <<FK>>
+  network_info: text
+  status: text
+  description: text
+  other_details : text
+}
+
+entity DeviceType {
+  * id : int <<generated>>
+  --
+  vendor: text
+  description: text
+  other_details : text
+}
+
+entity SmartScenario {
+  * id : long <<generated>>
+  --
+  * house_id: long <<FK>>
+  details : text
+}
+
+entity SmartAction {
+  * id : long <<generated>>
+  --
+  * smart_scenario_id : long <<FK>>
+  * event_type_id : int <<FK>>
+  * device_id : number <<FK>>
+  details : text
+}
+
+entity Event {
+  * id : UUID
+  --
+  * event_type_id : int <<FK>>
+  * device_id: long <<FK>>
+  details : text
+}
+
+entity EventType {
+  * id : int <<generated>>
+  --
+  description : text
+  details : text
+}
+
+Device }o--|| DeviceType
+Event }o--|| EventType
+House ||--|{ Device
+House ||--|{ SmartScenario
+SmartScenario ||--|{ SmartAction
+SmartAction }o--|| Device
+SmartAction }o--|| EventType
+
+@enduml
