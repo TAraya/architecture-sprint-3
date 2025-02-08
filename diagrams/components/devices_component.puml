@@ -1,0 +1,25 @@
+@startuml
+title Диаграмма компонентов сервиса взаимодействия с  устройствами
+
+top to bottom direction
+
+!include C4_Component.puml
+
+Container_Boundary(SmartControlContext, "Управление умными устройствами") {
+  Container(Service, "Сервис взаимодействия с устройствами", "Java") {
+    Component(Controller, "Controllers", "Является точкой входа в слой бизнес-логики")
+    Component(ServiceLayer, "Services", "Бизнес-логика")
+    Component(RepositoryLayer, "Repositories", "Логика работы с данными")
+  }
+  Container(Database, "БД сервиса взаимодействия с устройствами", "PostgreSQL", "Хранение данных об умных устройствах")
+}
+
+System_Ext(SmartDevices, "Умные устройства", "Датчики и исполнительные механизмы, поддерживающие работу с системой") 
+
+Rel(Controller, ServiceLayer, "Вызывает слой бизнес-логики")
+Rel(ServiceLayer, SmartDevices, "Управляет устройствами")
+Rel(ServiceLayer, SmartDevices, "Собирает данные с датчиков (в случае опроса со стороны сервера)")      
+Rel(ServiceLayer, RepositoryLayer, "Чтение/запись данных")
+Rel(RepositoryLayer, Database, "Чтение и запись данных умных устройств")
+
+@enduml

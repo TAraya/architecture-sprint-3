@@ -1,0 +1,31 @@
+@startuml
+title Диаграмма компонентов сервиса smart-управления устройствами (программирования пользовательских сценариев)
+
+top to bottom direction
+
+!include C4_Component.puml
+
+Container_Boundary(SmartControlContext, "Управление умными устройствами") {
+  Container(Service, "Сервис smart-управления устройствами", "Java") {
+    Component(Controller, "Controllers", "Является точкой входа в слой бизнес-логики")
+    Component(ServiceLayer, "Services", "Набор сервисов-обработчиков пользовательских сценариав (бизнес-логики)")
+    Component(BackgroundServiceLayer, "Background services", "Набор фоновых сервисов, отслеживающих появление событий")  
+    Component(RepositoryLayer, "Repositories", "Логика работы с БД")
+    Component(ExternalApiLayer, "External APIs", "Логика работы с внешними сервисами")
+  }
+  ContainerDb(Database, "БД сервиса smart-управления устройствами", "PostgreSQL", "Хранение данных пользовательских сценариев")
+  ContainerDb(AlertsMessageQueue, "Очередь событий мониторинга", "Kafka", "Содержит события системы, определенные посредством анализа данных датчиков и т.д., подлежащие дальнейшей обработке")
+  Container(DevicesService, "Сервис взаимодействия с устройствами", "Java", "Регистрация, учет, абстракция до терминов системы команд управления (в т.ч. синхронного запроса данных датчиков)")  
+  Container(MonitoringService, "Сервис мониторинга, сбора и анализа телеметрии", "Java", "Предоставление оперативного состояния датчиков умных устройств (включая видео), анализ данных с целью определения событий мониторинга")
+}
+
+Rel(Controller, ServiceLayer, "Вызывает слой бизнес-логики")
+Rel(ServiceLayer, RepositoryLayer, "Чтение/запись данных")
+Rel(ServiceLayer, ExternalApiLayer, "Вызов методов внешних сервисов")
+Rel(ExternalApiLayer, MonitoringService, "Запрашивает возможные события мониторинга, для определения реакции на них")
+Rel(ExternalApiLayer, DevicesService, "Запрашивает списки устройств и доступные команды, адресует команды управления устройствами")
+Rel(BackgroundServiceLayer, AlertsMessageQueue, "Вычитавает события для реакции на них в соответствии с определенными сценариями")
+Rel(BackgroundServiceLayer, ServiceLayer, "Инициирует обработку событий")
+Rel(RepositoryLayer, Database, "Чтение и запись данных пользовательских сценариев")
+
+@enduml

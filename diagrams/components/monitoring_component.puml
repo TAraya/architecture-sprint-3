@@ -1,0 +1,33 @@
+@startuml
+title Диаграмма контейнеров сервиса управления устройствами
+
+top to bottom direction
+
+!include C4_Component.puml
+
+Container_Boundary(SmartControlContext, "Управление умными устройствами") {
+  Container(Service, "Сервис мониторинга, сбора и анализа телеметрии", "Java") {
+    Component(Controller, "Controllers", "Является точкой входа в слой бизнес-логики")
+    Component(ServiceLayer, "Services", "Бизнес-логика")
+    Component(BackgroundServiceLayer, "Background services", "Набор фоновых сервисов, анализирующих данные телеметрии")  
+    Component(ExternalApiLayer, "External APIs", "Логика работы с внешними сервисами")
+    Component(RepositoryLayer, "Repositories", "Логика работы с данными")
+  }
+  ContainerDb(Database, "БД сервиса мониторинга", "PosgreSQL / InfluxDB", "Хранение данных и событий мониторинга в соответствии с политикой хранения")
+  ContainerDb(TelemetryMessageQueue, "Очередь данных телеметрии", "Kafka", "Содержит поступающие данные от датчиков, подлежащие дальнейшей обработке")
+  ContainerDb(AlertsMessageQueue, "Очередь событий мониторинга", "Kafka", "Содержит события системы, определенные посредством анализа данных датчиков и т.д., подлежащие дальнейшей обработке")
+  ContainerDb(FileStorage, "Файловое хранилище", "File system", "Содержит файлы, собранные или поступившие от умных устройств, преже всего видео")  
+  Container(DevicesService, "Сервис взаимодействия с устройствами", "Java", "Регистрация, учет, абстракция до терминов системы команд управления (в т.ч. синхронного запроса данных датчиков)")
+}
+
+Rel(Controller, ServiceLayer, "Вызывает слой бизнес-логики")
+Rel(ServiceLayer, RepositoryLayer, "Чтение/запись данных")
+Rel(BackgroundServiceLayer, ServiceLayer, "Инициирует обработку событий")
+Rel(BackgroundServiceLayer, TelemetryMessageQueue, "Вычитывает данные с датчиков для записи аггрегированной информации и определения событий мониторинга")
+Rel(ServiceLayer, AlertsMessageQueue, "Публикует события мониторинга")
+Rel(ServiceLayer, ExternalApiLayer, "Вызов методов внешних сервисов")
+Rel(ExternalApiLayer, FileStorage, "Запрашивает отправленные данные")
+Rel(ExternalApiLayer, DevicesService, "Собирает данные с датчиков (в случае опроса со стороны сервера)")  
+Rel(RepositoryLayer, Database, "Чтение и запись данных")
+
+@enduml
